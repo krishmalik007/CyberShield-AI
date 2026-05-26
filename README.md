@@ -15,9 +15,9 @@ The platform consists of three core integrated components:
 Phishing_Detection/
 ├── backend/                  # FastAPI Web Server
 │   ├── app/
-│   │   ├── database/         # SQLite & SQLAlchemy DB setup
-│   │   │   ├── database.py   # Connection engine & session getter
-│   │   │   └── models.py     # ScanHistory & EmailScanHistory schemas
+│   │   ├── database/         # MongoDB Atlas DB setup
+│   │   │   ├── database.py   # Connection client & async motor
+│   │   │   └── models.py     # Pydantic/Motor schemas
 │   │   ├── routes/           # API Routers
 │   │   │   ├── scan.py       # URL & Security Vulnerability scan routes
 │   │   │   ├── email.py      # Email scanning & summary routes
@@ -30,7 +30,7 @@ Phishing_Detection/
 │   │   ├── feature_extractor.py
 │   │   └── phishing_model.pkl
 │   ├── requirements.txt      # Python dependencies
-│   └── phishguard.db         # SQLite persistent database file
+│   └── .env                  # Environment variables (MongoDB URI, JWT secret)
 ├── dashboard/                # React Admin SOC Panel
 │   ├── src/
 │   │   ├── components/       # Visual widgets & graphs
@@ -68,8 +68,9 @@ Phishing_Detection/
 * **Warning Overlay (`warning/`)**:
   * Injects a full-screen, un-bypassable warning overlay if a page is classified as `phishing`.
   * Clearly states the threat type, risk score, and recommends safe navigation actions.
-* **Extension Heartbeat (`background.js`)**:
-  * Sends a ping to `/ping` every 15 seconds to report extension status.
+* **Dashboard Integration & Authentication (`content.js` / `background.js`)**:
+  * Communicates directly with the React dashboard via `window.postMessage` to report active status.
+  * Handles JWT authentication tokens to ensure secure access to extension features.
 
 ---
 
@@ -83,7 +84,7 @@ Phishing_Detection/
     * URL Length (>75 characters raises risk).
     * Subdomain count and presence of IP-based domain names.
     * Matches against common phishing keywords (`login`, `secure`, `banking`, etc.).
-  * **Persistent Logging**: Saves scan details (URL, classification, risk score) to the SQLite DB.
+  * **Persistent Logging**: Saves scan details (URL, classification, risk score) to MongoDB Atlas.
 * **`POST /analyze-security`**:
   * Performs target network assessments directly from the server.
   * **Port Scanner**: Probes standard system ports: `21` (FTP), `22` (SSH), `80` (HTTP), `443` (HTTPS), `3306` (MySQL), and `3389` (RDP).
@@ -111,18 +112,18 @@ Phishing_Detection/
 * **`GET /stats/trends`**:
   * Compiles trend metrics for the last 7 days to display in the frontend charts.
 
-#### 💓 Health & Connection (`app/main.py`)
+#### 💓 Authentication & Health (`app/main.py` / `app/routes/auth.py`)
+* **`POST /login`**: Secures dashboard and extension interactions using JWT-based authentication.
 * **`GET /health`**: Standard API ping test.
-* **`POST /ping`**: Captures heartbeat from the active browser extensions.
-* **`GET /extension-status`**: Confirms if an extension ping has been received in the last 120 seconds.
 
 ---
 
 ### 3. React SOC Dashboard
 
 * **Real-time Monitoring (`src/App.jsx`)**:
-  * Fetches information from the FastAPI backend and auto-refreshes every 30 seconds.
-  * Shows a flashing green "System Active" banner if the Chrome extension's heartbeat is registered by the backend.
+  * Fetches analytics from the FastAPI backend and auto-refreshes every 30 seconds.
+  * Uses direct client-side messaging with the extension to accurately reflect "System Active" or "System Inactive" states.
+  * Secures data access through an integrated login flow.
 * **Visual Components**:
   * **`StatCards.jsx`**: Displays overall counters like total URLs, blocked domains, scanned emails, and active risk.
   * **`ThreatChart.jsx`**: Renders custom visual line/area charts using `recharts` to map out the weekly threat progression.
@@ -148,10 +149,16 @@ python -m venv venv
 # Install requirements
 pip install -r requirements.txt
 
+# Set up environment variables
+# Create a .env file with your MongoDB connection string and JWT_SECRET
+# MONGODB_URI=mongodb+srv://...
+# JWT_SECRET=your_secret_key
+
 # Launch the backend
 uvicorn app.main:app --reload
 ```
 *The API will be available at `http://localhost:8000`.*
+*Note: The backend is also configured for seamless production deployment on platforms like Railway.*
 
 ### 2. Start the React SOC Dashboard
 Make sure Node.js (v16+) is installed.
