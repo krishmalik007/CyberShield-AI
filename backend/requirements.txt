@@ -1,0 +1,15 @@
+fastapi
+uvicorn
+pymongo
+pydantic
+scikit-learn
+numpy
+pandas
+joblib
+python-multipart
+requests
+bcrypt
+python-jose[cryptography]
+python-dotenv
+dnspython
+email-validator

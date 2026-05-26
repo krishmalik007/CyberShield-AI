@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>CyberShield AI</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <h1>CyberShield AI</h1>
+            </div>
+            <p class="subtitle">Real-time Phishing Detection</p>
+        </header>
+
+        <main>
+            <div id="status-card" class="status-card unknown">
+                <h2 id="status-text">Scanning...</h2>
+                <div class="score-container">
+                    <span class="score-label">Risk Score:</span>
+                    <span id="risk-score" class="score-value">-</span>
+                </div>
+                <p id="current-url" class="url-text">waiting for URL...</p>
+            </div>
+            
+            <div id="email-summary" class="findings-container summary-container" style="display: none;">
+                <h3>AI Summary:</h3>
+                <p id="summary-text"></p>
+            </div>
+            
+            <div id="email-findings" class="findings-container" style="display: none;">
+                <h3>Email Findings:</h3>
+                <ul id="findings-list"></ul>
+            </div>
+            
+            <div id="security-results" class="findings-container" style="display: none;">
+                <h3>Security Analysis:</h3>
+                <div id="ports-section" style="margin-bottom: 8px;">
+                    <strong>Open Ports:</strong>
+                    <ul id="ports-list" style="margin-top: 4px; padding-left: 20px;"></ul>
+                </div>
+                <div id="vuln-section">
+                    <strong>Vulnerabilities:</strong>
+                    <ul id="vuln-list" style="margin-top: 4px; padding-left: 20px;"></ul>
+                </div>
+            </div>
+            
+            <div class="actions">
+                <button id="scan-btn" class="primary-btn">Rescan Page URL</button>
+                <button id="scan-email-btn" class="secondary-btn" style="margin-top: 8px;">Analyze On-Screen Email</button>
+                <button id="analyze-security-btn" class="secondary-btn" style="margin-top: 8px;">Check Security & Ports</button>
+                <button id="history-btn" class="secondary-btn" style="margin-top: 8px; border-color: #3b82f6; color: #3b82f6;">View Scan History</button>
+            </div>
+        </main>
+
+        <footer>
+            <p>Protected by AI</p>
+        </footer>
+    </div>
+    <script src="popup.js"></script>
+</body>
+</html>
