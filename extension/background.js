@@ -1,4 +1,4 @@
-const API_URL = "https://cybershield-ai-007.up.railway.app";
+const API_URL = "http://localhost:8000";
 
 // Handle messages from content script or popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {

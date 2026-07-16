@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Use environment variable or default to local backend
-const API_BASE_URL = 'https://cybershield-ai-007.up.railway.app';
+const API_BASE_URL = 'http://localhost:8000';
 
 const getAuthHeaders = () => {
     const token = localStorage.getItem('token');
@@ -35,7 +35,8 @@ export const signup = async (username, email, password) => {
         body: JSON.stringify({ username, email, password }),
     });
     if (!response.ok) {
-        throw new Error('Signup failed');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || 'Signup failed');
     }
     return response.json();
 };

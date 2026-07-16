@@ -1,4 +1,4 @@
-const API_URL = "https://cybershield-ai-007.up.railway.app";
+const API_URL = "http://localhost:8000";
 
 document.addEventListener('DOMContentLoaded', () => {
     fetchHistory();
