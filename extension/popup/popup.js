@@ -1,12 +1,13 @@
 document.addEventListener('DOMContentLoaded', async () => {
     // Check authentication first
-    const authData = await chrome.storage.local.get("cybershield_token");
+    const authData = await chrome.storage.local.get(["cybershield_token", "dashboard_origin"]);
+    const dashboardUrl = authData.dashboard_origin || "http://localhost:5175";
     if (!authData.cybershield_token) {
         document.querySelector('main').innerHTML = `
             <div style="text-align: center; padding: 30px 20px;">
                 <h2 style="color: #ef4444; margin-bottom: 12px; font-size: 20px;">Not Logged In</h2>
                 <p style="color: #94a3b8; font-size: 14px; margin-bottom: 24px; line-height: 1.5;">Please log in to your CyberShield AI dashboard to use the extension features.</p>
-                <a href="http://localhost:5173/login" target="_blank" style="display: inline-block; padding: 10px 20px; background: #3b82f6; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px;">Open Dashboard</a>
+                <a href="${dashboardUrl}/login" target="_blank" style="display: inline-block; padding: 10px 20px; background: #3b82f6; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px;">Open Dashboard</a>
             </div>
         `;
         return;

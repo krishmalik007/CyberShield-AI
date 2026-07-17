@@ -14,6 +14,55 @@ except Exception as e:
     print(f"Could not load ML model (will fallback to heuristic): {e}")
     model = None
 
+WHITELISTED_DOMAINS = {
+    'google.com',
+    'googleusercontent.com',
+    'oracle.com',
+    'koyeb.com',
+    'github.com',
+    'microsoft.com',
+    'live.com',
+    'outlook.com',
+    'okta.com',
+    'auth0.com',
+    'netlify.app',
+    'vercel.app',
+    'supabase.co',
+    'firebaseapp.com',
+    'apple.com',
+    'facebook.com',
+    'twitter.com',
+    'linkedin.com',
+    'gmail.com'
+}
+
+def is_whitelisted(url: str) -> bool:
+    try:
+        parsed_url = urlparse(url)
+        domain = parsed_url.netloc.lower()
+        if not domain:
+            # Fallback if no scheme (e.g. urlparse("google.com").netloc is empty)
+            if not url.startswith(('http://', 'https://')):
+                parsed_url = urlparse('https://' + url)
+                domain = parsed_url.netloc.lower()
+            else:
+                domain = url.split('/')[0].lower()
+        
+        # Remove port if present
+        domain = domain.split(':')[0]
+        
+        # Check direct match or subdomain match
+        if domain in WHITELISTED_DOMAINS:
+            return True
+            
+        for white_dom in WHITELISTED_DOMAINS:
+            if domain.endswith('.' + white_dom):
+                return True
+                
+        return False
+    except Exception:
+        return False
+
 def get_heuristic_score(url: str) -> int:
     risk_score = 0
     parsed_url = urlparse(url)
@@ -36,6 +85,13 @@ def scan_url(url: str) -> dict:
     """
     Scans a URL. Uses ML if available, otherwise falls back to heuristic.
     """
+    if is_whitelisted(url):
+        return {
+            "url": url,
+            "risk_score": 0.0,
+            "classification": "safe"
+        }
+
     if model:
         # Use ML Model
         features_df = features_to_dataframe(url)

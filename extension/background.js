@@ -1,14 +1,18 @@
-const API_URL = "http://localhost:8000";
+const API_URL = "http://127.0.0.1:8000";
 
 // Handle messages from content script or popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "store_auth_token") {
-        chrome.storage.local.set({ cybershield_token: request.token });
+        const dataToStore = { cybershield_token: request.token };
+        if (request.origin) {
+            dataToStore.dashboard_origin = request.origin;
+        }
+        chrome.storage.local.set(dataToStore);
         return false;
     }
     
     if (request.action === "clear_auth_token") {
-        chrome.storage.local.remove("cybershield_token");
+        chrome.storage.local.remove(["cybershield_token", "dashboard_origin"]);
         return false;
     }
 
@@ -48,6 +52,38 @@ async function getAuthHeaders() {
 
 // Function to call the backend API
 async function scanUrl(url) {
+    // Return early/mock response for internal pages or localhost/local IPs to avoid errors and self-scanning loops
+    try {
+        const parsed = new URL(url);
+        const hostname = parsed.hostname;
+        if (
+            hostname === "localhost" ||
+            hostname === "127.0.0.1" ||
+            hostname.startsWith("192.168.") ||
+            hostname.startsWith("10.") ||
+            hostname.endsWith(".local")
+        ) {
+            const mockData = {
+                url: url,
+                risk_score: 0.0,
+                classification: "safe"
+            };
+            await chrome.storage.local.set({ lastScan: mockData });
+            return mockData;
+        }
+    } catch (e) {
+        // Fallback for invalid URLs or non-http/https protocols (like chrome-extension:// or file://)
+        if (!url.startsWith("http://") && !url.startsWith("https://")) {
+            const mockData = {
+                url: url,
+                risk_score: 0.0,
+                classification: "safe"
+            };
+            await chrome.storage.local.set({ lastScan: mockData });
+            return mockData;
+        }
+    }
+
     try {
         const response = await fetch(`${API_URL}/scan-url`, {
             method: "POST",
@@ -116,7 +152,7 @@ chrome.webNavigation.onCompleted.addListener((details) => {
     // Only scan main frame
     if (details.frameId === 0) {
         // Exclude browser internal pages
-        if (!details.url.startsWith("chrome://") && !details.url.startsWith("edge://") && !details.url.startsWith("about:")) {
+        if (!details.url.startsWith("chrome://") && !details.url.startsWith("edge://") && !details.url.startsWith("about:") && !details.url.startsWith("chrome-extension://")) {
             scanUrl(details.url).then(result => {
                 if (result.classification === "phishing") {
                     // Trigger warning (will implement in Stage 3)

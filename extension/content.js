@@ -16,7 +16,8 @@ window.addEventListener("message", (event) => {
     if (event.data && event.data.type === 'CYBERSHIELD_LOGIN') {
         chrome.runtime.sendMessage({ 
             action: 'store_auth_token', 
-            token: event.data.token 
+            token: event.data.token,
+            origin: event.origin || window.location.origin
         });
         console.log("CyberShield AI: Auth token synced from dashboard via message.");
     }
@@ -33,12 +34,13 @@ window.addEventListener("message", (event) => {
 });
 
 // Proactively check for token if on the dashboard domain (fixes race condition if message is missed)
-if (window.location.hostname.includes("cybershield-ai-0007.netlify.app") || window.location.hostname === "localhost") {
+if (window.location.hostname.includes("cybershield-ai-0007.netlify.app") || window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
     const token = window.localStorage.getItem("token");
     if (token) {
         chrome.runtime.sendMessage({ 
             action: 'store_auth_token', 
-            token: token 
+            token: token,
+            origin: window.location.origin
         });
         console.log("CyberShield AI: Auth token synced proactively from localStorage.");
     }
